@@ -5,17 +5,12 @@ import numpy as np
 import logg as lg
 import os
 import tensorflow_probability as tfp
-import time
-import pandas as pd
-
-import math
 
 class Agent():
 	def __init__(self, env, seed, batch_size, gamma, learning_rate):
 		self.env = env
 		self.ob_dim = env.observation_space.shape[0]
 		self.is_discrete = isinstance(env.action_space, gym.spaces.Discrete)
-		#might update continuous case later
 		if self.is_discrete:
 			self.ac_dim = env.action_space.n
 		else:
@@ -26,11 +21,8 @@ class Agent():
 		self.batch_size = batch_size
 		self.gamma = gamma
 		self.optimizer = tf.keras.optimizers.Adam(learning_rate)
-
-		# self.optimizer = tf.keras.optimizers.Adam(learning_rate, clipnorm = 1, clipvalue = 1)
 		self.model = self.build_model()
-		#debug purpose
-		self.last = None
+
 	#building policy NN
 	def build_model(self):
 		model = tf.keras.Sequential([
@@ -57,18 +49,8 @@ class Agent():
 		else:
 			mean = self.model(obs)
 			if self.std == None:
-				# consider how to apply batch size here!!!
+				# consider how to apply batch size here
 				self.std = tf.Variable(tf.zeros(self.ac_dim),name = "std", dtype = tf.float32)
-			
-			
-			# std= tf.nn.moments(mean, 0)[0]
-			# import pdb
-			# pdb.set_trace()        
-			# print(std)
-			# self.std = std
-			# if math.nan in std.numpy() or math.isnan(std.numpy()):
-			# 	import pdb
-			# 	pdb.set_trace()
 			return (mean, self.std)
 
 	def sample_trajectory(self,env):
@@ -90,7 +72,6 @@ class Agent():
 		return path, steps
 
 	def sample_action(self, policy_param):
-		#might update continuous case later
 		if self.is_discrete:
 			logits = policy_param
 			# remember tf.random.categorical intakes batch-shaped input and returns batch-shaped output
@@ -101,8 +82,6 @@ class Agent():
 			sampled_ac = sampled_ac.numpy()
 		else:
 			mean, std = policy_param
-			# sampled_ac = tf.random.normal(tf.shape(mean), mean = mean, stddev = std)
-
 			eps = tf.random.normal([self.ac_dim])
 			sampled_ac = mean + tf.exp(std) * eps
 			sampled_ac = sampled_ac.numpy()
@@ -110,7 +89,6 @@ class Agent():
 
 	#train model
 	def log_prob(self, policy_param, acs):
-		#assumed discrete case. Will update continuous case once I have more time
 		if self.is_discrete:
 			logits = policy_param
 			log_prob = tf.keras.losses.sparse_categorical_crossentropy(y_true = acs, y_pred = logits, from_logits = True)
@@ -184,7 +162,6 @@ def train_PG(env_name, gamma, seed, n_iter, batch_size, lr, exp_name, n_experime
 	env = gym.make(env_name)
 	np.random.seed(seed)
 	env.seed(seed)
-	#assumed discrete env
 	#try to let the agent independent from environment so that we can use the agent in other envs. And also think it is right concept
 	#because we could introduce other agents with the same env.
 	agent = Agent(env, seed, batch_size, gamma, lr)
