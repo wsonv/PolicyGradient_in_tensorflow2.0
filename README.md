@@ -23,6 +23,11 @@ Implementation of Policy Gradient in Tensorflow2.0
 	$ python plot.py Data/your_exp_name
 	$ python plot.py Data/your_exp_name -f
 
+## Example Result
+CartPole-v0
+iteration : 100
+number of experiments : 2
+![CartPole](result/CartPole-full.png)
 
 ## Author
 
