@@ -1,7 +1,7 @@
 # PolicyGradient_in_tensorflow2.0
 Implementation of Policy Gradient in Tensorflow2.0
 
-* This code referenced skeleton code offered in the course [CS294-112 github](https://github.com/berkeleydeeprlcourse/homework/tree/master/hw2)
+* This code referenced skeleton code, which is in TensorFlow 1.x, offered in the course [CS294-112 github](https://github.com/berkeleydeeprlcourse/homework/tree/master/hw2)
 * Implemented for both continuous and discrete action spaces with reward-to-go option.
 * Implemented q function normalization to decrease variation.
 
