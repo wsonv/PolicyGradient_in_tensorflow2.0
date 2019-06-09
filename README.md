@@ -11,7 +11,7 @@ Implementation of Policy Gradient in Tensorflow2.0
 * Tensorflow2.0
 * Tensorflow_probability (you need to use nightly build to use it in TF2.0)
 * numpy
-* (optional) gym (you can use your own environment)
+* gym 
 
 ## Example Usage
 
