@@ -17,6 +17,7 @@ Implementation of Policy Gradient in Tensorflow2.0
 
 ### Training
 *available arguments : --discount, --n_experiment, --n_iter, --seed, --batch, --learning_rate, --exp_name. --render
+
 	$ python PG_in_tf2.0.py CartPole-v0 --exp_name Test_disc --seed 1 --render
 	$ python PG_in_tf2.0.py Pendulum-v0 --exp_name Test_cont --seed 1
 
