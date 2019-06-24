@@ -7,7 +7,7 @@ import os
 import tensorflow_probability as tfp
 
 class Agent():
-	def __init__(self, env, seed, batch_size, gamma, learning_rate):
+	def __init__(self, env, seed, batch_size, gamma, learning_rate, render = False):
 		self.env = env
 		self.ob_dim = env.observation_space.shape[0]
 		self.is_discrete = isinstance(env.action_space, gym.spaces.Discrete)
@@ -22,6 +22,7 @@ class Agent():
 		self.gamma = gamma
 		self.optimizer = tf.keras.optimizers.Adam(learning_rate)
 		self.model = self.build_model()
+		self.render = render
 
 	#building policy NN
 	def build_model(self):
@@ -63,7 +64,12 @@ class Agent():
 			policy_param = self.policy_param(np.expand_dims(ob, axis = 0))
 			ac = self.sample_action(policy_param)
 			acs.append(ac)
+			#render
+			if self.render:
+				self.env.render()
 			ob, re, done, _ = env.step(ac)
+			#sometimes, env returns nested list(ex : mountaincarcontinouous env)
+			ob = np.squeeze(ob)
 			res.append(re)
 			steps += 1
 			if done or steps >= self.max_p_length:
@@ -85,6 +91,7 @@ class Agent():
 			eps = tf.random.normal([self.ac_dim])
 			sampled_ac = mean + tf.exp(std) * eps
 			sampled_ac = sampled_ac.numpy()
+
 		return sampled_ac
 
 	#train model
@@ -142,12 +149,10 @@ class Agent():
 			self.optimizer.apply_gradients(zip(grads, training_vars))
 
 		qs = self.sum_rewards(res)
-		
 		#tensorize variables so that there is no error under @tf.function
 		obs = tf.cast(obs, dtype = obs.dtype)
 		acs = tf.cast(acs, dtype = acs.dtype)
 		qs = tf.cast(qs, dtype = qs.dtype)
-		
 		train(obs, acs, qs)
 
 	def save_model(self, exp_name, seed, itr):
@@ -158,13 +163,13 @@ class Agent():
 
 
 #train step
-def train_PG(env_name, gamma, seed, n_iter, batch_size, lr, exp_name, n_experiment):
+def train_PG(env_name, gamma, seed, n_iter, batch_size, lr, exp_name, n_experiment, render):
 	env = gym.make(env_name)
 	np.random.seed(seed)
 	env.seed(seed)
 	#try to let the agent independent from environment so that we can use the agent in other envs. And also think it is right concept
 	#because we could introduce other agents with the same env.
-	agent = Agent(env, seed, batch_size, gamma, lr)
+	agent = Agent(env, seed, batch_size, gamma, lr, render)
 	lg.initiate(exp_name, seed)
 	for itr in range(n_iter):
 		paths = agent.sample_trajectories(env)
@@ -197,12 +202,14 @@ def main():
 	parser.add_argument("--batch", "-b", type = int, default = 1000)
 	parser.add_argument("--learning_rate", "-lr", type = float, default = 5e-3)
 	parser.add_argument("--exp_name", "-na", type = str, default = "hahaha")
+	parser.add_argument("--render", action = 'store_true')
+
 
 	arguments = parser.parse_args()
 	for i in range(arguments.n_experiment):
 		seed = arguments.seed + i
 		train_PG(arguments.environment, arguments.discount, seed, arguments.n_iter, arguments.batch\
-			, arguments.learning_rate, arguments.exp_name, i)
+			, arguments.learning_rate, arguments.exp_name, i, arguments.render)
 
 
 
